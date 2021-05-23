@@ -1,5 +1,9 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
-import { CreateShortUrlDto } from './create-short-url.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { CreateMiniUrlDto as CreateMiniUrlDto } from './create-mini-url.dto';
+import { MiniUrl, MiniUrlDocument } from './mini-url.schema';
+import { MongoDbError } from './mongo.constants';
 import { UrlGeneratorService } from './url-generator.service';
 
 @Injectable()
@@ -7,26 +11,42 @@ export class AppService {
   private static readonly GENERATE_ATTEMPTS_MAX_COUNT = 5;
   private static readonly SHORT_URL_LENGTH = 7;
 
-  constructor(private readonly urlGeneratorService: UrlGeneratorService) {}
+  constructor(
+    private readonly urlGeneratorService: UrlGeneratorService,
+    @InjectModel(MiniUrl.name) private miniUrlModel: Model<MiniUrlDocument>
+  ) {}
 
   private readonly logger = new Logger(AppService.name);
-
-  private readonly mapping = new Map<string, string>();
 
   getWelcomePage(): string {
     return 'Welcome to yet another URL shortener';
   }
 
-  getOriginal(shortUrl: string): string | null {
-    return this.mapping.get(shortUrl) ?? null;
+  async getOriginal(shortUrl: string): Promise<string | null> {
+    const miniUrl = await this.miniUrlModel.findOne({ shortUrl: shortUrl }).exec();
+    if (!miniUrl) {
+      return null;
+    }
+    return miniUrl.originalUrl;
   }
 
-  createShortUrl(createShortUrlDto: CreateShortUrlDto): string {
+  async createMiniUrl(createMiniUrlDto: CreateMiniUrlDto): Promise<string> {
     for (let i = 0; i < AppService.GENERATE_ATTEMPTS_MAX_COUNT; ++i) {
       const shortUrl = this.urlGeneratorService.generate(AppService.SHORT_URL_LENGTH);
-      if (!this.mapping.has(shortUrl)) {
-        this.mapping.set(shortUrl, createShortUrlDto.originalUrl);
+      const createdMiniUrl = new this.miniUrlModel({
+        shortUrl: shortUrl,
+        originalUrl: createMiniUrlDto.originalUrl
+      });
+
+      try {
+        await createdMiniUrl.save();
         return shortUrl;
+      } catch (e) {
+        if (e.code !== MongoDbError.DUPLICATE_KEY_ERROR_INDEX) {
+          throw e;
+        }
+
+        this.logger.error(`Collision detected for shortUrl=${shortUrl}`);
       }
     }
 

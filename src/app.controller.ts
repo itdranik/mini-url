@@ -9,7 +9,7 @@ import {
   Redirect
 } from '@nestjs/common';
 import { AppService } from './app.service';
-import { CreateShortUrlDto } from './create-short-url.dto';
+import { CreateMiniUrlDto } from './create-mini-url.dto';
 
 @Controller()
 export class AppController {
@@ -22,8 +22,10 @@ export class AppController {
 
   @Get(':shortUrl')
   @Redirect()
-  redirect(@Param('shortUrl') shortUrl: string): { url: string; statusCode: number } {
-    const originalUrl = this.appService.getOriginal(shortUrl);
+  async redirect(
+    @Param('shortUrl') shortUrl: string
+  ): Promise<{ url: string; statusCode: number }> {
+    const originalUrl = await this.appService.getOriginal(shortUrl);
     if (!originalUrl) {
       throw new NotFoundException(shortUrl);
     }
@@ -32,8 +34,8 @@ export class AppController {
   }
 
   @Post()
-  create(@Body() createShortUrlDto: CreateShortUrlDto): string {
-    const shortUrl = this.appService.createShortUrl(createShortUrlDto);
+  async create(@Body() createMiniUrlDto: CreateMiniUrlDto): Promise<string> {
+    const shortUrl = await this.appService.createMiniUrl(createMiniUrlDto);
     return `${process.env.DOMAIN}/${shortUrl}`;
   }
 }
