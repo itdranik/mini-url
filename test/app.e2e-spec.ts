@@ -15,11 +15,10 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('A welcome page', () => {
+  it('Ping responses with OK', () => {
     return request(app.getHttpServer())
       .get('/')
-      .expect(HttpStatus.OK)
-      .expect('Welcome to yet another URL shortener');
+      .expect(HttpStatus.OK);
   });
 
   it('Generating a short URL', async () => {

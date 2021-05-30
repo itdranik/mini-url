@@ -4,8 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LoggerMiddleware } from './logger.middleware';
-import { MiniUrl, MiniUrlSchema } from './mini-url.schema';
-import { UrlGeneratorService } from './url-generator.service';
+import { MiniUrlModule } from './mini-url/mini-url.module';
 
 @Module({
   imports: [
@@ -21,10 +20,10 @@ import { UrlGeneratorService } from './url-generator.service';
       }),
       inject: [ConfigService]
     }),
-    MongooseModule.forFeature([{ name: MiniUrl.name, schema: MiniUrlSchema }])
+    MiniUrlModule
   ],
   controllers: [AppController],
-  providers: [AppService, UrlGeneratorService]
+  providers: [AppService]
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
