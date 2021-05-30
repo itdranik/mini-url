@@ -16,9 +16,7 @@ describe('AppController (e2e)', () => {
   });
 
   it('Ping responses with OK', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(HttpStatus.OK);
+    return request(app.getHttpServer()).get('/').expect(HttpStatus.OK);
   });
 
   it('Generating a short URL', async () => {

@@ -1,19 +1,29 @@
 import { MongooseModule } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
-import { closeInMongodConnection, rootMongooseTestModule } from './testUtils/mongo.testUtils';
 import { MiniUrl, MiniUrlSchema } from './mini-url.schema';
 import { MiniUrlService } from './mini-url.service';
 import { UrlGeneratorService } from './url-generator.service';
 import { InternalServerErrorException } from '@nestjs/common';
+import { InMemoryMongoModule } from '@app/test-utils/in-memory-mongo/in-memory-mongo.module';
+import { InMemoryMongoServer } from '@app/test-utils/in-memory-mongo/in-memory-mongo.server';
 
 describe('MiniUrlService', () => {
   let miniUrlService: MiniUrlService;
   let urlGeneratorService: UrlGeneratorService;
+  let module: TestingModule;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      imports:[
-        rootMongooseTestModule(),
+    module = await Test.createTestingModule({
+      imports: [
+        MongooseModule.forRootAsync({
+          imports: [InMemoryMongoModule],
+          useFactory: async (server: InMemoryMongoServer) => {
+            return {
+              uri: await server.getUri()
+            };
+          },
+          inject: [InMemoryMongoServer]
+        }),
         MongooseModule.forFeature([{ name: MiniUrl.name, schema: MiniUrlSchema }])
       ],
       providers: [MiniUrlService, UrlGeneratorService]
@@ -24,7 +34,7 @@ describe('MiniUrlService', () => {
   });
 
   afterEach(async () => {
-    await closeInMongodConnection();
+    await module.close();
   });
 
   it('should be defined', () => {

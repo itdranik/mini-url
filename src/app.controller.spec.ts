@@ -19,10 +19,13 @@ describe('AppController', () => {
 
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService, {
-        provide: MiniUrlService,
-        useValue: miniUrlService
-      }]
+      providers: [
+        AppService,
+        {
+          provide: MiniUrlService,
+          useValue: miniUrlService
+        }
+      ]
     }).compile();
 
     appController = app.get<AppController>(AppController);
