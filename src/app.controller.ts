@@ -9,15 +9,15 @@ import {
   Redirect
 } from '@nestjs/common';
 import { AppService } from './app.service';
-import { CreateMiniUrlDto } from './create-mini-url.dto';
+import { CreateMiniUrlDto } from './mini-url/create-mini-url.dto';
 
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  getWelcomePage(): string {
-    return this.appService.getWelcomePage();
+  ping(): void {
+    this.appService.ping();
   }
 
   @Get(':shortUrl')
