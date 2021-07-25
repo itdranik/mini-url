@@ -7,7 +7,7 @@ import { InMemoryMongoServer } from './in-memory-mongo.server';
     {
       provide: InMemoryMongoServer,
       useFactory: async () => {
-        return new InMemoryMongoServer(new MongoMemoryServer());
+        return new InMemoryMongoServer(await MongoMemoryServer.create());
       }
     }
   ],
